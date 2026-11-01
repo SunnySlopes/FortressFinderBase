@@ -54,7 +54,7 @@ struct FortressHit {
  */
 struct SearchConfig {
     int mode = 0; // 0 = cross, 1 = span
-    int mc = 25;  // cubiomes MC_1_20
+    int mc = 35;  // cubiomes MC_26_3 (1.18~26.3+ generation group)
     uint64_t seed = 0;
     int centerX = 0;
     int centerZ = 0;

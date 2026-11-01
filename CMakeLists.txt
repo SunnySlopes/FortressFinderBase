@@ -98,6 +98,28 @@ if(FORTRESSFINDER_BUILD_CLI)
 endif()
 
 # ---------------------------------------------------------------------------
+# Version consistency checker (development tool).
+#
+# Compares fortress generation across cubiomes versions over a configurable
+# grid of structure regions.  See tools/fortress_version_check.cpp.
+# ---------------------------------------------------------------------------
+option(FORTRESSFINDER_BUILD_VERSION_CHECK "Build the fortress version consistency checker" ON)
+if(FORTRESSFINDER_BUILD_VERSION_CHECK)
+    add_executable(fortress-version-check tools/fortress_version_check.cpp)
+    target_link_libraries(fortress-version-check PRIVATE fortressfinder-core)
+    set_target_properties(fortress-version-check PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    if(MINGW)
+        target_link_options(fortress-version-check PRIVATE
+            -static
+            -static-libgcc
+            -static-libstdc++
+        )
+    endif()
+endif()
+
+# ---------------------------------------------------------------------------
 # JNI library for the FortressFinder Java GUI.
 # ---------------------------------------------------------------------------
 option(FORTRESSFINDER_BUILD_JNI "Build the fortressFinderLibJ JNI library" ON)

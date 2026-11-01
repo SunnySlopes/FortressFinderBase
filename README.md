@@ -81,7 +81,7 @@ cmake --build build --target fortressFinderLibJ
 | --- | --- | --- |
 | `--seed <int64>` | 必填 | 世界种子，可为负数 |
 | `--mode cross\|span` | `cross` | 十字路口 / 大范围要塞 |
-| `--mc <id\|version>` | `26.2` | 版本名或 cubiomes `MCVersion` 数值（20–34） |
+| `--mc <id\|version>` | `26.3` | 版本名或 cubiomes `MCVersion` 数值（19–35），见下方版本分组 |
 | `--center-x` / `--center-z` | `0` | 搜索中心 |
 | `--radius` | `2000` | 搜索半径（方块） |
 | `--min-x/--max-x/--min-z/--max-z` | 未设置 | 显式矩形，四项必须一起给出，优先于 center/radius |
@@ -109,6 +109,37 @@ chunkX  chunkZ  x  y  z  spanX  spanY  spanZ  teleport
 
 结果按距原点距离、X、Z 排序，与 Java GUI 的展示顺序一致。
 
+## 版本分组
+
+下界要塞生成按版本分为两组，组内所有补丁版本生成结果完全一致：
+
+| 分组 | 搜索使用的地图 | 版本别名 |
+| --- | --- | --- |
+| `1.18 ~ 26.3+` | 26.3（`MC_26_3`） | 1.18、1.18.1、1.18.2、1.19、1.19.2、1.19.4、1.20、1.20.1、1.20.4、1.20.6、1.21、1.21.1、1.21.3、1.21.4、1.21.5、1.21.6、1.21.9、1.21.11、26.1、26.2、26.3、latest |
+| `1.16 ~ 1.17` | 1.17（`MC_1_17_1`） | 1.16、1.16.1、1.16.5、1.17、1.17.1 |
+
+1.16~1.17 与 1.18+ 的要塞位置、可生成性均不同，因此保留独立分组；
+1.18 与 26.3 之间只存在与要塞无关的生成变化（例如 26.3 的堡垒结构盐），
+要塞位置、可生成性、完整结构片段完全相同。
+
+可以用 `fortress-version-check` 复核这个结论（见下节）。
+
+## 版本一致性检查
+
+`tools/fortress_version_check.cpp` 会在指定种子与结构区域网格上，
+逐区域比较各版本的：要塞结构位置、`isViableStructurePos`、堡垒位置/可生成性、
+堡垒变体以及每个要塞片段的类型与包围盒。
+
+```powershell
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DFORTRESSFINDER_BUILD_JNI=OFF
+cmake --build build --target fortress-version-check
+.\build\bin\fortress-version-check.exe --versions 22,24,25,26,33,34,35 --regions 200
+```
+
+默认以 1.18.2 为基线、检查 5 个种子、半径 40 个结构区域。退出码非 0 表示
+存在版本差异；加 `--report-only` 只报告不失败（用于确认 1.16/1.17 确实
+与 1.18+ 不同）。
+
 ## 目录
 
 ```text
@@ -116,6 +147,7 @@ fortress_finder.h / .cpp   C++ 引擎与公开 API
 fortress_cli.cpp           独立 CLI
 Thread.h                   线程池与线程安全结果容器
 jni/                       JNI 桥接与签入头文件
+tools/                     开发工具（fortress-version-check）
 cubiomes/                  嵌套 git 子模块
 build_jni_msys2.ps1        MSYS2 构建 JNI DLL
 build_cli_msys2.ps1        MSYS2 构建独立 exe

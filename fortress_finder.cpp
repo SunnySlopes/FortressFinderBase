@@ -127,7 +127,7 @@ namespace {
 
     struct InternalConfig {
         Mode mode = Mode::Cross;
-        int mc = MC_1_20;
+        int mc = MC_26_3;
         uint64_t seed = 0;
         SearchArea area;
         CrossFilter crossFilter = CrossFilter::All;

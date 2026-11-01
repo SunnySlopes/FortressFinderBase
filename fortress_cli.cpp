@@ -42,7 +42,7 @@ struct Options {
     bool seedSet = false;
 
     int mode = 0; // 0 = cross, 1 = span
-    int mc = 34;  // cubiomes MC_26_2, same default as the Java GUI
+    int mc = 35;  // cubiomes MC_26_3: the 1.18~26.3+ generation group
 
     int centerX = 0;
     int centerZ = 0;
@@ -68,44 +68,66 @@ struct VersionAlias {
     int mc;
 };
 
+/*
+ * Fortress generation is identical for every release inside a group:
+ *
+ *   1.16 ~ 1.17   -> MC_1_17_1 (21)
+ *   1.18 ~ 26.3+  -> MC_26_3   (35)
+ *
+ * 1.16/1.17 differ from 1.18+ in both structure placement and viability, so
+ * they keep their own generation base.  Aliases are kept one per patch
+ * release so existing command lines keep working; every alias in a group
+ * resolves to that group's representative cubiomes version.
+ */
 constexpr VersionAlias kVersionAliases[] = {
-    {"1.16", 20},
-    {"1.16.5", 20},
+    {"1.16", 21},
+    {"1.16.1", 21},
+    {"1.16.5", 21},
     {"1.17", 21},
     {"1.17.1", 21},
-    {"1.18", 22},
-    {"1.18.1", 22},
-    {"1.18.2", 22},
-    {"1.19", 24},
-    {"1.19.2", 24},
-    {"1.19.4", 24},
-    {"1.20", 25},
-    {"1.20.1", 25},
-    {"1.20.4", 25},
-    {"1.20.6", 25},
-    {"1.21", 26},
-    {"1.21.1", 26},
-    {"1.21.3", 26},
-    {"1.21.4", 26},
-    {"1.21.5", 26},
-    {"1.21.6", 26},
-    {"1.21.9", 26},
-    {"1.21.11", 26},
-    {"26.1", 33},
-    {"26.2", 34},
-    {"latest", 34},
+    {"1.18", 35},
+    {"1.18.1", 35},
+    {"1.18.2", 35},
+    {"1.19", 35},
+    {"1.19.2", 35},
+    {"1.19.4", 35},
+    {"1.20", 35},
+    {"1.20.1", 35},
+    {"1.20.4", 35},
+    {"1.20.6", 35},
+    {"1.21", 35},
+    {"1.21.1", 35},
+    {"1.21.3", 35},
+    {"1.21.4", 35},
+    {"1.21.5", 35},
+    {"1.21.6", 35},
+    {"1.21.9", 35},
+    {"1.21.11", 35},
+    {"26.1", 35},
+    {"26.2", 35},
+    {"26.3", 35},
+    {"latest", 35},
 };
 
-std::string_view mcDisplayName(int mc) {
+std::string mcDisplayName(int mc) {
     switch (mc) {
+    case 19: return "1.16.1";
     case 20: return "1.16";
     case 21: return "1.17";
     case 22: return "1.18";
+    case 23: return "1.19.2";
     case 24: return "1.19";
     case 25: return "1.20";
     case 26: return "1.21";
+    case 27: return "1.21.3";
+    case 28: return "1.21.4";
+    case 29: return "1.21.5";
+    case 30: return "1.21.6";
+    case 31: return "1.21.9";
+    case 32: return "1.21.11";
     case 33: return "26.1";
     case 34: return "26.2";
+    case 35: return "26.3";
     default: return "unknown";
     }
 }
@@ -162,7 +184,7 @@ void printUsage(std::ostream &os) {
         "                          required together and override center/radius\n"
         "\n"
         "Search parameters:\n"
-        "  --mc <id|version>       generation base, default 26.2\n"
+        "  --mc <id|version>       generation base, default 26.3 (1.18~26.3+)\n"
         "  --cross-filter all|triple-quad|quad   default all\n"
         "  --min-long <int>        span mode: minimum long edge, default 0\n"
         "  --min-short <int>       span mode: minimum short edge, default 0\n"
@@ -176,11 +198,13 @@ void printUsage(std::ostream &os) {
         "  --help, -h              show this help\n"
         "  --version               show CLI version\n"
         "\n"
-        "Version names:\n"
-        "  1.16, 1.16.5, 1.17, 1.17.1, 1.18, 1.18.1, 1.18.2, 1.19, 1.19.2,\n"
-        "  1.19.4, 1.20, 1.20.1, 1.20.4, 1.20.6, 1.21, 1.21.1, 1.21.3, 1.21.4,\n"
-        "  1.21.5, 1.21.6, 1.21.9, 1.21.11, 26.1, 26.2, latest\n"
-        "  A raw cubiomes MCVersion id between 20 and 34 is also accepted.\n"
+        "Version groups (patches inside a group generate identical fortresses):\n"
+        "  1.16 ~ 1.17  : 1.16, 1.16.1, 1.16.5, 1.17, 1.17.1\n"
+        "  1.18 ~ 26.3+ : 1.18, 1.18.1, 1.18.2, 1.19, 1.19.2, 1.19.4,\n"
+        "                 1.20, 1.20.1, 1.20.4, 1.20.6, 1.21, 1.21.1,\n"
+        "                 1.21.3, 1.21.4, 1.21.5, 1.21.6, 1.21.9, 1.21.11,\n"
+        "                 26.1, 26.2, 26.3, latest\n"
+        "  A raw cubiomes MCVersion id between 19 and 35 is also accepted.\n"
         "\n"
         "Examples:\n"
         "  fortressfinder-cli --seed 12345 --mode cross --radius 5000 --out cross.txt\n"
@@ -227,7 +251,7 @@ bool parseInt(std::string_view text, int &value) {
 bool parseMc(std::string_view text, int &mc) {
     int numeric = 0;
     if (parseInt(text, numeric)) {
-        if (numeric < 20 || numeric > 34)
+        if (numeric < 19 || numeric > 35)
             return false;
         mc = numeric;
         return true;
