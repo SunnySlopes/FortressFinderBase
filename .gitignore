@@ -1,0 +1,11 @@
+build/
+build-ninja/
+cmake-build-*/
+out/
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.DS_Store
+Thumbs.db
